@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechWorld — Магазин електроніки та техніки</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#060911',
+                            800: '#090D16',
+                            700: '#0F172A',
+                            600: '#1E293B',
+                            500: '#334155'
+                        },
+                        accent: {
+                            blue: '#3B82F6',
+                            glow: '#60A5FA',
+                            dark: '#1D4ED8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #060911;
+            --bg-card: #0F172A;
+            --bg-card-hover: #1E293B;
+            --bg-header: #090D16;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --accent: #3B82F6;
+            --accent-glow: #60A5FA;
+            --accent-hover: #2563EB;
+            --border-color: #1E293B;
+            --radius: 16px;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .custom-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+        }
+        .blue-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    </style>
+</head>
+<body class="bg-navy-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 border-b border-slate-800 bg-navy-800/90 backdrop-blur-md shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <!-- Logo -->
+            <a href="#" onclick="filterCategory('all')" class="flex items-center gap-2 text-2xl font-black text-blue-500 hover:text-blue-400 transition">
+                <i class="fa-solid fa-bolt-lightning text-blue-400"></i>
+                <span>TechWorld</span>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="flex-1 max-w-xl relative hidden md:block">
+                <div class="flex items-center bg-navy-900 border border-slate-800 rounded-full px-4 py-2 focus-within:border-blue-500 transition">
+                    <i class="fa-solid fa-search text-slate-400"></i>
+                    <input type="text" id="searchInput" placeholder="Пошук товарів (наприклад, iPhone, Ноутбук, Навушники)..." 
+                           class="w-full bg-transparent border-none outline-none text-sm text-slate-100 ml-3 placeholder-slate-500"
+                           oninput="handleSearch(this.value)">
+                </div>
+                <!-- Live Search Results -->
+                <div id="liveSearchResults" class="absolute top-12 left-0 right-0 custom-card shadow-2xl max-h-80 overflow-y-auto hidden z-50"></div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-3">
+                <!-- Favorites Button -->
+                <button onclick="openWishlistModal()" class="relative w-10 h-10 rounded-full bg-navy-900 border border-slate-800 flex items-center justify-center text-slate-200 hover:border-blue-500 hover:text-blue-400 transition" title="Обране">
+                    <i class="fa-solid fa-heart"></i>
+                    <span id="wishlistBadge" class="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+
+                <!-- Cart Button -->
+                <button onclick="openCartModal()" class="relative w-10 h-10 rounded-full bg-navy-900 border border-slate-800 flex items-center justify-center text-slate-200 hover:border-blue-500 hover:text-blue-400 transition blue-glow" title="Кошик">
+                    <i class="fa-solid fa-cart-shopping text-blue-400"></i>
+                    <span id="cartBadge" class="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+
+                <!-- User Profile Area -->
+                <div id="userHeaderArea"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Sidebar Categories -->
+        <aside class="space-y-6 hidden lg:block">
+            <div class="custom-card p-5">
+                <h3 class="font-bold text-base mb-4 flex items-center gap-2 text-blue-400">
+                    <i class="fa-solid fa-list"></i> Каталог категорій
+                </h3>
+                <ul class="space-y-1.5 text-sm" id="categoryList">
+                    <li>
+                        <button onclick="filterCategory('all')" class="w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn active flex items-center justify-between text-blue-400 bg-slate-800/80" data-cat="all">
+                            <span>Усі товари</span>
+                            <span class="text-xs opacity-70" id="countAll">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="filterCategory('smartphones')" class="w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn flex items-center justify-between text-slate-400 hover:text-blue-400 hover:bg-slate-800/50" data-cat="smartphones">
+                            <span>Смартфони & Гаджети</span>
+                            <span class="text-xs opacity-70" id="countSmartphones">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="filterCategory('laptops')" class="w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn flex items-center justify-between text-slate-400 hover:text-blue-400 hover:bg-slate-800/50" data-cat="laptops">
+                            <span>Ноутбуки & ПК</span>
+                            <span class="text-xs opacity-70" id="countLaptops">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="filterCategory('audio')" class="w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn flex items-center justify-between text-slate-400 hover:text-blue-400 hover:bg-slate-800/50" data-cat="audio">
+                            <span>Аудіо & Навушники</span>
+                            <span class="text-xs opacity-70" id="countAudio">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="filterCategory('gaming')" class="w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn flex items-center justify-between text-slate-400 hover:text-blue-400 hover:bg-slate-800/50" data-cat="gaming">
+                            <span>Ігри & Консолі</span>
+                            <span class="text-xs opacity-70" id="countGaming">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="filterCategory('accessories')" class="w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn flex items-center justify-between text-slate-400 hover:text-blue-400 hover:bg-slate-800/50" data-cat="accessories">
+                            <span>Аксесуари</span>
+                            <span class="text-xs opacity-70" id="countAccessories">0</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Promo Sidebar Banner -->
+            <div class="rounded-2xl p-5 text-center bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/30">
+                <div class="text-blue-400 text-3xl mb-2"><i class="fa-solid fa-shield-halved"></i></div>
+                <h4 class="font-bold text-base text-blue-400 mb-1">Безпека 2FA</h4>
+                <p class="text-xs text-slate-400 mb-3">Захистіть свій акаунт двофакторною автентифікацією з одноразовим кодом підтвердження.</p>
+                <button onclick="openAuthModal('login')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition w-full shadow-lg shadow-blue-600/30">Увійти в профіль</button>
+            </div>
+        </aside>
+
+        <!-- Main Product Section -->
+        <section class="lg:col-span-3 space-y-6">
+            
+            <!-- Dynamic Slider -->
+            <div class="relative h-64 rounded-2xl overflow-hidden border border-slate-800 custom-card">
+                <div class="absolute inset-0 bg-cover bg-center transition-all duration-700" id="bannerSlide">
+                    <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-transparent flex items-center p-8">
+                        <div class="max-w-md">
+                            <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Спеціальна пропозиція</span>
+                            <h2 class="text-2xl md:text-3xl font-black text-white mt-2 mb-2" id="bannerTitle">Грандіозний розпродаж</h2>
+                            <p class="text-sm text-slate-300 mb-4" id="bannerDesc">Знижки до -40% на найновіші девайси та смартфони цього року!</p>
+                            <button onclick="filterCategory('smartphones')" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition">Дивитися каталог</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Controls -->
+                <button onclick="prevSlide()" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-slate-900/80 border border-slate-700 text-white hover:bg-blue-600 flex items-center justify-center transition"><i class="fa-solid fa-chevron-left"></i></button>
+                <button onclick="nextSlide()" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-slate-900/80 border border-slate-700 text-white hover:bg-blue-600 flex items-center justify-center transition"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <!-- Toolbar & Sort -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-navy-700 p-4 rounded-2xl border border-slate-800">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <span class="text-sm font-semibold text-slate-400">Сортування:</span>
+                    <select id="sortSelect" onchange="changeSort(this.value)" class="bg-navy-900 border border-slate-800 text-slate-200 text-sm rounded-xl px-3 py-2 outline-none focus:border-blue-500">
+                        <option value="popular">За популярністю</option>
+                        <option value="cheap">Спочатку дешевші</option>
+                        <option value="expensive">Спочатку дорожчі</option>
+                        <option value="rating">За рейтингом</option>
+                    </select>
+                </div>
+                <div class="text-sm text-slate-400" id="productCountInfo">
+                    Знайдено товарів: <span class="font-bold text-blue-400" id="totalCountSpan">0</span>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5" id="productGrid"></div>
+
+            <!-- Pagination Controls -->
+            <div class="flex items-center justify-center gap-2 pt-4 pb-8" id="paginationContainer"></div>
+
+        </section>
+    </main>
+
+    <!-- Product Detail Modal (With Reviews & Comments) -->
+    <div id="productDetailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="custom-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl border-blue-500/30">
+            <button onclick="closeProductDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-blue-400 text-xl z-10"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div id="productDetailContent" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <!-- Enhanced Cart Modal (Floats with Dimmed Background) -->
+    <div id="cartModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="custom-card w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl border border-blue-500/40 blue-glow">
+            <button onclick="closeCartModal()" class="absolute top-4 right-4 text-slate-400 hover:text-blue-400 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            
+            <!-- Cart Visual Header -->
+            <div class="text-center pb-4 mb-4 border-b border-slate-800">
+                <div class="w-16 h-16 bg-blue-600/20 text-blue-400 border border-blue-500/40 rounded-2xl flex items-center justify-center mx-auto mb-2 text-2xl shadow-inner">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-100">Ваша кошик-тележка</h3>
+                <p class="text-xs text-slate-400 mt-1">Перевірте ваші товари перед оформленням</p>
+            </div>
+
+            <div id="cartItemsContainer" class="space-y-3 mb-6 max-h-64 overflow-y-auto pr-1"></div>
+
+            <div class="border-t border-slate-800 pt-4 space-y-3">
+                <div class="flex justify-between text-sm text-slate-400">
+                    <span>Товари:</span>
+                    <span id="cartSubtotal" class="font-semibold text-slate-200">0 ₴</span>
+                </div>
+                <div class="flex justify-between text-lg font-black">
+                    <span>Разом до сплати:</span>
+                    <span id="cartTotal" class="text-blue-400">0 ₴</span>
+                </div>
+                <button onclick="checkoutOrder()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 text-base">
+                    <i class="fa-solid fa-check"></i> Оформити замовлення
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="custom-card w-full max-w-md p-6 relative shadow-2xl">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-blue-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            
+            <!-- Login View -->
+            <div id="loginView" class="auth-view space-y-4">
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-lock"></i></div>
+                    <h3 class="text-xl font-bold">Вхід до акаунту</h3>
+                    <p class="text-xs text-slate-400 mt-1">Введіть ваші дані для авторизації</p>
+                </div>
+                <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Email або Телефон</label>
+                        <input type="text" id="loginIdentifier" required placeholder="example@mail.com або +380..." class="w-full bg-navy-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Пароль</label>
+                        <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/30">Продовжити</button>
+                </form>
+                <div class="text-center pt-2">
+                    <p class="text-xs text-slate-400">Немає акаунту? <button onclick="switchAuthView('register')" class="text-blue-400 font-bold hover:underline">Зареєструватися</button></p>
+                </div>
+            </div>
+
+            <!-- Register View -->
+            <div id="registerView" class="auth-view space-y-4 hidden">
+                <div class="text-center mb-4">
+                    <div class="w-12 h-12 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl"><i class="fa-solid fa-user-plus"></i></div>
+                    <h3 class="text-xl font-bold">Реєстрація акаунту</h3>
+                    <p class="text-xs text-slate-400 mt-1">Створіть профіль із захистом 2FA</p>
+                </div>
+                <form onsubmit="handleRegisterSubmit(event)" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Ім'я</label>
+                            <input type="text" id="regName" required placeholder="Олександр" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Прізвище</label>
+                            <input type="text" id="regSurname" required placeholder="Коваленко" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Електронна пошта (реальний email)</label>
+                        <input type="email" id="regEmail" required placeholder="alex@example.com" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                        <p class="text-[10px] text-slate-500 mt-1">Будь ласка, вкажіть дійсну пошту (не набір цифр)</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Номер телефону</label>
+                        <input type="text" id="regPhone" required placeholder="+380 (67) 123-45-67" oninput="formatPhoneInput(this)" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Пароль</label>
+                        <input type="password" id="regPassword" required placeholder="Мінімум 6 символів" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex items-center gap-2 pt-1">
+                        <input type="checkbox" id="reg2faToggle" checked class="rounded border-slate-800 text-blue-600 focus:ring-blue-500">
+                        <label for="reg2faToggle" class="text-xs text-slate-400">Увімкнути двофакторну автентифікацію (2FA)</label>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/30 mt-2">Зареєструватися</button>
+                </form>
+                <div class="text-center pt-1">
+                    <p class="text-xs text-slate-400">Вже є акаунт? <button onclick="switchAuthView('login')" class="text-blue-400 font-bold hover:underline">Увійти</button></p>
+                </div>
+            </div>
+
+            <!-- 2FA Verification View -->
+            <div id="twoFactorView" class="auth-view space-y-4 hidden">
+                <div class="text-center mb-4">
+                    <div class="w-12 h-12 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl"><i class="fa-solid fa-shield-cat"></i></div>
+                    <h3 class="text-xl font-bold">Двофакторна перевірка (2FA)</h3>
+                    <p class="text-xs text-slate-400 mt-1">Введіть одноразовий 4-значний код для підтвердження входу.</p>
+                </div>
+                <div class="bg-navy-900 p-4 rounded-xl border border-slate-800 text-center">
+                    <p class="text-xs text-slate-400 mb-1">Згенерований код 2FA:</p>
+                    <div class="text-2xl font-black text-blue-400 tracking-widest" id="simulatedCodeDisplay">1234</div>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Введіть код із SMS / Пошти</label>
+                        <input type="text" id="twoFactorCodeInput" maxlength="4" placeholder="••••" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-4 py-3 text-center text-xl font-black tracking-widest text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                    <button onclick="verify2FACode()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/30">Підтвердити вхід</button>
+                    <button onclick="switchAuthView('login')" class="w-full text-xs text-slate-400 hover:text-blue-400 py-1">Повернутися назад</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Account Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="custom-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-blue-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-blue-400">
+                <i class="fa-solid fa-gear"></i> Налаштування акаунту
+            </h3>
+
+            <!-- Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-4">
+                <button onclick="switchSettingsTab('profile')" class="settings-tab-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-blue-600 text-white" data-tab="profile">Профіль</button>
+                <button onclick="switchSettingsTab('security')" class="settings-tab-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-navy-900 text-slate-400 hover:text-slate-100" data-tab="security">Безпека & 2FA</button>
+                <button onclick="switchSettingsTab('orders')" class="settings-tab-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-navy-900 text-slate-400 hover:text-slate-100" data-tab="orders">Історія замовлень</button>
+            </div>
+
+            <!-- Tab: Profile -->
+            <div id="settingsTabProfile" class="settings-tab-content space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Ім'я</label>
+                        <input type="text" id="setProfileName" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Прізвище</label>
+                        <input type="text" id="setProfileSurname" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Електронна пошта</label>
+                        <input type="email" id="setProfileEmail" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Номер телефону (+380...)</label>
+                        <input type="text" id="setProfilePhone" oninput="formatPhoneInput(this)" class="w-full bg-navy-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-end">
+                    <button onclick="saveProfileSettings()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-lg shadow-blue-600/30">Зберегти зміни</button>
+                </div>
+            </div>
+
+            <!-- Tab: Security -->
+            <div id="settingsTabSecurity" class="settings-tab-content space-y-4 hidden">
+                <div class="bg-navy-900 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-sm">Двофакторна автентифікація (2FA)</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Вимагати код підтвердження при кожному вході</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="settings2faToggle" onchange="toggle2FASetting(this.checked)" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Tab: Orders -->
+            <div id="settingsTabOrders" class="settings-tab-content space-y-3 hidden">
+                <div id="orderHistoryList" class="space-y-3 max-h-80 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wishlist Modal -->
+    <div id="wishlistModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="custom-card w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+            <button onclick="closeWishlistModal()" class="absolute top-4 right-4 text-slate-400 hover:text-blue-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-blue-400">
+                <i class="fa-solid fa-heart"></i> Список обраного
+            </h3>
+            <div id="wishlistItemsContainer" class="space-y-3 max-h-80 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white border border-blue-500/50 px-5 py-3 rounded-2xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-blue-400 text-lg" id="toastIcon"></i>
+        <span class="text-sm font-semibold" id="toastMessage">Повідомлення</span>
+    </div>
+
+    <script>
+        // Expanded Product List (24 items with full reviews)
+        const products = [
+            { id: 1, title: "Apple iPhone 16 Pro Max 512GB Titanium", category: "smartphones", price: 65999, oldPrice: 69999, rating: 4.9, reviewsCount: 184, tag: "Хіт", img: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", desc: "Флагманський смартфон із титановим корпусом, процесором A18 Pro та покращеною системою камер." },
+            { id: 2, title: "Samsung Galaxy S24 Ultra 12/512GB", category: "smartphones", price: 57999, oldPrice: 62999, rating: 4.8, reviewsCount: 112, tag: "Знижка", img: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=600&q=80", desc: "Потужний смартфон із штучним інтелектом Galaxy AI, стилусом S Pen та 200 Мп камерою." },
+            { id: 3, title: "Apple MacBook Pro 16 M3 Max 36GB", category: "laptops", price: 139999, oldPrice: 149999, rating: 5.0, reviewsCount: 78, tag: "Новинка", img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80", desc: "Професійний ноутбук для монтажу відео, розробки та графіки з екраном Liquid Retina XDR." },
+            { id: 4, title: "Sony WH-1000XM5 Black Wireless ANC", category: "audio", price: 14999, oldPrice: 16999, rating: 4.9, reviewsCount: 290, tag: "Топ", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80", desc: "Преміальні бездротові навушники з найкращим у своєму класі активним шумозаглушенням." },
+            { id: 5, title: "Sony PlayStation 5 Slim 1TB", category: "gaming", price: 21999, oldPrice: 23999, rating: 4.9, reviewsCount: 420, tag: "Хіт", img: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=600&q=80", desc: "Ігрова консоль нового покоління з підтримкою 4K ігор, швидким SSD та геймпадом DualSense." },
+            { id: 6, title: "ASUS ROG Zephyrus G16 OLED Gaming", category: "laptops", price: 92999, oldPrice: 99999, rating: 4.7, reviewsCount: 61, tag: "Знижка", img: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=600&q=80", desc: "Потужний ігровий ноутбук із ультрашвидким OLED-екраном та графікою NVIDIA RTX 4080." },
+            { id: 7, title: "Xiaomi 14 Ultra Leica 16/512GB", category: "smartphones", price: 48999, oldPrice: 53999, rating: 4.6, reviewsCount: 95, tag: "Новинка", img: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80", desc: "Камерофон із квадрокамерою Leica та дюймовим сенсором для професійної зйомки." },
+            { id: 8, title: "Apple AirPods Pro 2 USB-C", category: "audio", price: 9999, oldPrice: 11499, rating: 4.8, reviewsCount: 512, tag: "Хіт", img: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&w=600&q=80", desc: "TWS навушники з покращеним адаптивним аудіо та кейсом із роз'ємом USB-C." },
+            { id: 9, title: "Nintendo Switch OLED Mario Edition", category: "gaming", price: 13999, oldPrice: 15499, rating: 4.8, reviewsCount: 210, tag: "Новинка", img: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=600&q=80", desc: "Портативна ігрова консоль із яскравим 7-дюймовим OLED-екраном та лімітованим дизайном." },
+            { id: 10, title: "Logitech MX Master 3S Wireless Mouse", category: "accessories", price: 4499, oldPrice: 4999, rating: 4.9, reviewsCount: 380, tag: "Топ", img: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=600&q=80", desc: "Ергономічна миша для продуктивної роботи з безшумними кліками та сенсором 8000 DPI." },
+            { id: 11, title: "Dell UltraSharp 32 4K USB-C Monitor", category: "accessories", price: 34999, oldPrice: 38999, rating: 4.8, reviewsCount: 42, tag: "Знижка", img: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80", desc: "Професійний 4K монітор із точним охопленням кольорів та підключенням через USB-C." },
+            { id: 12, title: "JBL Boombox 3 Wi-Fi Portable Speaker", category: "audio", price: 19999, oldPrice: 22999, rating: 4.9, reviewsCount: 115, tag: "Хіт", img: "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=600&q=80", desc: "Потужна портативна акустика із глибоким басом, Wi-Fi та вологозахистом IP67." },
+            { id: 13, title: "Google Pixel 9 Pro XL 256GB", category: "smartphones", price: 46999, oldPrice: 49999, rating: 4.7, reviewsCount: 89, tag: "Новинка", img: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80", desc: "Смартфон від Google із чистим Android та найкращими алгоритмами обробки фото." },
+            { id: 14, title: "Lenovo Legion Pro 5 16 Gaming", category: "laptops", price: 68999, oldPrice: 73999, rating: 4.8, reviewsCount: 77, tag: "Знижка", img: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=600&q=80", desc: "Надійний ігровий ноутбук із процесором AMD Ryzen 7 та відеокартою RTX 4070." },
+            { id: 15, title: "Keychron K2 Pro Wireless Mechanical Keyboard", category: "accessories", price: 4299, oldPrice: 4899, rating: 4.9, reviewsCount: 164, tag: "Топ", img: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80", desc: "Механічна бездротова клавіатура з гарячою заміною перемикачів та QMK/VIA." },
+            { id: 16, title: "Microsoft Xbox Series X 1TB", category: "gaming", price: 20999, oldPrice: 22999, rating: 4.7, reviewsCount: 230, tag: "Знижка", img: "https://images.unsplash.com/photo-1621259182978-fbf93132d53d?auto=format&fit=crop&w=600&q=80", desc: "Найпотужніша консоль від Microsoft із підпискою Game Pass та 12 терафлопс обчислювальної потужності." },
+            { id: 17, title: "Marshall Stanmore III Bluetooth Speaker", category: "audio", price: 15999, oldPrice: 17999, rating: 4.9, reviewsCount: 92, tag: "Топ", img: "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=600&q=80", desc: "Легендарний вінтажний дизайн із сучасним об'ємним звучанням домашньої системи." },
+            { id: 18, title: "Apple Watch Ultra 2 GPS + Cellular", category: "smartphones", price: 37999, oldPrice: 39999, rating: 4.9, reviewsCount: 140, tag: "Хіт", img: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&q=80", desc: "Захищений розумний годинник для екстремальних умов із титановим корпусом." },
+            { id: 19, title: "Samsung Odyssey OLED G8 Gaming Monitor", category: "accessories", price: 42999, oldPrice: 46999, rating: 4.8, reviewsCount: 55, tag: "Новинка", img: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80", desc: "Вигнутий OLED монітор із частотою оновлення 175 Гц та часу відгуку 0.03 мс." },
+            { id: 20, title: "Steam Deck OLED 1TB Handheld", category: "gaming", price: 28999, oldPrice: 31999, rating: 4.9, reviewsCount: 310, tag: "Хіт", img: "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=600&q=80", desc: "Портативна ПК-консоль для запуску вашої бібліотеки Steam прямо у дорозі." },
+            { id: 21, title: "OnePlus 12 16/512GB Silky Black", category: "smartphones", price: 38999, oldPrice: 42999, rating: 4.7, reviewsCount: 68, tag: "Знижка", img: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80", desc: "Швидкий смартфон із зарядкою 100 Вт та екраном рекордної яскравості." },
+            { id: 22, title: "Razer DeathAdder V3 Pro Wireless", category: "accessories", price: 5999, oldPrice: 6499, rating: 4.8, reviewsCount: 190, tag: "Топ", img: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=600&q=80", desc: "Ультралегка кіберспортивна миша з вагою всього 63 грами." },
+            { id: 23, title: "Sennheiser Momentum 4 Wireless", category: "audio", price: 12999, oldPrice: 14499, rating: 4.7, reviewsCount: 85, tag: "Знижка", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80", desc: "Навушники з вражаючою автономністю до 60 годин від одного заряду." },
+            { id: 24, title: "iPad Pro 13 M4 Wi-Fi 256GB", category: "laptops", price: 54999, oldPrice: 58999, rating: 4.9, reviewsCount: 110, tag: "Новинка", img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80", desc: "Ультратонкий планшет із революційним Ultra Retina XDR дисплеєм." }
+        ];
+
+        // Store Product Comments in LocalStorage
+        let productComments = JSON.parse(localStorage.getItem('techworld_comments')) || {
+            1: [
+                { author: "Дмитро", text: "Чудовий телефон! Камера просто космічна.", stars: 5, date: "05.10.2026" },
+                { author: "Анна", text: "Титан відчувається дуже приємно в руці.", stars: 5, date: "08.10.2026" }
+            ],
+            3: [
+                { author: "Максим", text: "Для рендерингу в Blender просто немає рівних.", stars: 5, date: "01.10.2026" }
+            ]
+        };
+
+        // App States
+        let currentUser = JSON.parse(localStorage.getItem('techworld_user')) || null;
+        let cart = JSON.parse(localStorage.getItem('techworld_cart')) || [];
+        let wishlist = JSON.parse(localStorage.getItem('techworld_wishlist')) || [];
+        let orders = JSON.parse(localStorage.getItem('techworld_orders')) || [
+            { id: "ORD-9821", date: "10.10.2026", total: "65 999 ₴", status: "Доставлено", items: ["Apple iPhone 16 Pro Max 512GB Titanium"] }
+        ];
+
+        let currentCategory = 'all';
+        let currentSort = 'popular';
+        let searchQuery = '';
+        let currentPage = 1;
+        const itemsPerPage = 6; // Page size for navigation
+
+        let pendingAuthData = null;
+        let generatedTwoFactorCode = "1234";
+
+        let currentBannerIndex = 0;
+        const banners = [
+            { title: "Нове покоління флагманів", desc: "Топовий дизайн, флагманські камери та швидка доставка по всій Україні.", img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80" },
+            { title: "Геймерські ноутбуки та консолі", desc: "Максимальний FPS та реалістична графіка на ультра-налаштуваннях.", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80" },
+            { title: "Преміальне аудіо & Студія", desc: "Відчуйте кришталево чистий звук із передовим шумозаглушенням.", img: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80" }
+        ];
+
+        window.onload = function() {
+            updateHeaderUser();
+            updateCartBadge();
+            updateWishlistBadge();
+            renderProducts();
+            renderCategoryCounts();
+            startBannerAutoSlide();
+        };
+
+        // Phone Mask format for Ukraine (+380 (XX) XXX-XX-XX)
+        function formatPhoneInput(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.startsWith('380')) val = val.substring(3);
+            else if (val.startsWith('0')) val = val.substring(1);
+            let formatted = '+380 ';
+            if (val.length > 0) formatted += '(' + val.substring(0, 2);
+            if (val.length >= 3) formatted += ') ' + val.substring(2, 5);
+            if (val.length >= 6) formatted += '-' + val.substring(5, 7);
+            if (val.length >= 8) formatted += '-' + val.substring(7, 9);
+            input.value = formatted;
+        }
+
+        function updateHeaderUser() {
+            const container = document.getElementById('userHeaderArea');
+            if (currentUser) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <button onclick="openSettingsModal()" class="flex items-center gap-2 bg-navy-900 border border-slate-800 px-3 py-1.5 rounded-full hover:border-blue-500 transition cursor-pointer">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow">${currentUser.name.charAt(0)}</div>
+                            <div class="text-left hidden sm:block">
+                                <div class="text-xs font-bold">${currentUser.name} ${currentUser.surname}</div>
+                                <div class="text-[10px] text-blue-400 font-semibold">Акаунт 2FA</div>
+                            </div>
+                        </button>
+                        <button onclick="logout()" class="w-9 h-9 rounded-full bg-navy-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-500 transition" title="Вийти">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="openAuthModal('login')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/30">
+                        <i class="fa-solid fa-user mr-1.5"></i> Увійти / Реєстрація
+                    </button>
+                `;
+            }
+        }
+
+        // Auth Modal Actions
+        function openAuthModal(view = 'login') {
+            document.getElementById('authModal').classList.remove('hidden');
+            switchAuthView(view);
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+
+        function switchAuthView(viewName) {
+            document.querySelectorAll('.auth-view').forEach(el => el.classList.add('hidden'));
+            if (viewName === 'login') {
+                document.getElementById('loginView').classList.remove('hidden');
+            } else if (viewName === 'register') {
+                document.getElementById('registerView').classList.remove('hidden');
+            } else if (viewName === '2fa') {
+                document.getElementById('twoFactorView').classList.remove('hidden');
+                generatedTwoFactorCode = Math.floor(1000 + Math.random() * 9000).toString();
+                document.getElementById('simulatedCodeDisplay').innerText = generatedTwoFactorCode;
+            }
+        }
+
+        function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const surname = document.getElementById('regSurname').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const use2fa = document.getElementById('reg2faToggle').checked;
+
+            // Email Validation Requirement (No random digits, must contain valid format)
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email) || /^\d+$/.test(email.split('@')[0])) {
+                showToast("Введіть коректну електронну пошту (наприклад, alex@gmail.com)", "error");
+                return;
+            }
+
+            pendingAuthData = { name, surname, email, phone, password, twoFactorEnabled: use2fa };
+            showToast("Реєстрація успішна! Пройдіть перевірку 2FA.");
+            switchAuthView('2fa');
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const identifier = document.getElementById('loginIdentifier').value.trim();
+
+            pendingAuthData = currentUser || {
+                name: "Олександр",
+                surname: "Коваленко",
+                email: identifier.includes('@') ? identifier : "alex@techworld.ua",
+                phone: "+380 (67) 123-45-67",
+                twoFactorEnabled: true
+            };
+
+            if (pendingAuthData.twoFactorEnabled) {
+                switchAuthView('2fa');
+            } else {
+                completeLogin(pendingAuthData);
+            }
+        }
+
+        function verify2FACode() {
+            const entered = document.getElementById('twoFactorCodeInput').value.trim();
+            if (entered === generatedTwoFactorCode) {
+                completeLogin(pendingAuthData);
+            } else {
+                showToast("Невірний код 2FA! Спробуйте ще раз.", "error");
+            }
+        }
+
+        function completeLogin(userData) {
+            currentUser = userData;
+            localStorage.setItem('techworld_user', JSON.stringify(currentUser));
+            closeAuthModal();
+            updateHeaderUser();
+            showToast(`Ласкаво просимо, ${currentUser.name}!`);
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('techworld_user');
+            updateHeaderUser();
+            showToast("Ви вийшли з акаунту");
+        }
+
+        // Product Detail & Review Modal
+        function openProductDetailModal(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            const comments = productComments[id] || [];
+            const container = document.getElementById('productDetailContent');
+
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<i class="fa-solid fa-star ${i <= Math.round(prod.rating) ? 'text-amber-400' : 'text-slate-700'}"></i>`;
+            }
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="h-64 md:h-80 rounded-2xl overflow-hidden bg-navy-900 border border-slate-800">
+                        <img src="${prod.img}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex flex-col justify-between">
+                        <div>
+                            <span class="bg-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${prod.tag}</span>
+                            <h2 class="text-xl font-bold mt-2 text-slate-100">${prod.title}</h2>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="text-sm">${starsHtml}</div>
+                                <span class="text-xs font-bold text-slate-300">${prod.rating}</span>
+                                <span class="text-xs text-slate-500">(${prod.reviewsCount} відгуків)</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-4 leading-relaxed">${prod.desc}</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-slate-500 line-through block">${prod.oldPrice.toLocaleString()} ₴</span>
+                                <span class="text-2xl font-black text-blue-400">${prod.price.toLocaleString()} ₴</span>
+                            </div>
+                            <button onclick="addToCart(${prod.id})" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center gap-2">
+                                <i class="fa-solid fa-cart-plus"></i> Додати в кошик
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review & Comments Section -->
+                <div class="border-t border-slate-800 pt-6">
+                    <h3 class="font-bold text-lg text-slate-100 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-comments text-blue-400"></i> Відгуки покупців
+                    </h3>
+
+                    <!-- Add Comment Form -->
+                    <form onsubmit="handleAddComment(event, ${prod.id})" class="bg-navy-900 p-4 rounded-xl border border-slate-800 mb-6 space-y-3">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Залишити свій коментар</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" id="commentAuthorInput" placeholder="Ваше ім'я" required class="bg-navy-800 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 outline-none focus:border-blue-500">
+                            <select id="commentStarsInput" class="bg-navy-800 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 outline-none focus:border-blue-500">
+                                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                <option value="3">⭐⭐⭐ (3/5)</option>
+                                <option value="2">⭐⭐ (2/5)</option>
+                                <option value="1">⭐ (1/5)</option>
+                            </select>
+                        </div>
+                        <textarea id="commentTextInput" required placeholder="Напишіть ваше враження про цей товар..." rows="2" class="w-full bg-navy-800 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 outline-none focus:border-blue-500"></textarea>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded-xl transition">Опублікувати відгук</button>
+                    </form>
+
+                    <!-- Comments List -->
+                    <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                        ${comments.length === 0 ? '<p class="text-xs text-slate-500 italic">Поки немає коментарів. Будьте першим!</p>' : 
+                            comments.map(c => `
+                                <div class="bg-navy-900 p-3 rounded-xl border border-slate-800 text-xs">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="font-bold text-slate-200">${c.author}</span>
+                                        <span class="text-[10px] text-slate-500">${c.date}</span>
+                                    </div>
+                                    <div class="text-amber-400 mb-1">
+                                        ${'<i class="fa-solid fa-star"></i>'.repeat(c.stars)}
+                                    </div>
+                                    <p class="text-slate-400">${c.text}</p>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('productDetailModal').classList.remove('hidden');
+        }
+
+        function closeProductDetailModal() {
+            document.getElementById('productDetailModal').classList.add('hidden');
+        }
+
+        function handleAddComment(e, productId) {
+            e.preventDefault();
+            const author = document.getElementById('commentAuthorInput').value.trim();
+            const stars = parseInt(document.getElementById('commentStarsInput').value);
+            const text = document.getElementById('commentTextInput').value.trim();
+
+            if (!productComments[productId]) productComments[productId] = [];
+            
+            productComments[productId].unshift({
+                author,
+                stars,
+                text,
+                date: new Date().toLocaleDateString()
+            });
+
+            localStorage.setItem('techworld_comments', JSON.stringify(productComments));
+            showToast("Дякуємо! Ваш відгук успішно додано.");
+            openProductDetailModal(productId);
+        }
+
+        // Profile & Settings
+        function openSettingsModal() {
+            if (!currentUser) { openAuthModal('login'); return; }
+            document.getElementById('setProfileName').value = currentUser.name || '';
+            document.getElementById('setProfileSurname').value = currentUser.surname || '';
+            document.getElementById('setProfileEmail').value = currentUser.email || '';
+            document.getElementById('setProfilePhone').value = currentUser.phone || '';
+            document.getElementById('settings2faToggle').checked = currentUser.twoFactorEnabled;
+            
+            renderOrderHistory();
+            document.getElementById('settingsModal').classList.remove('hidden');
+            switchSettingsTab('profile');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function switchSettingsTab(tabName) {
+            document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabName) {
+                    btn.className = "settings-tab-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-blue-600 text-white";
+                } else {
+                    btn.className = "settings-tab-btn px-4 py-2 rounded-xl text-sm font-semibold transition bg-navy-900 text-slate-400 hover:text-slate-100";
+                }
+            });
+            document.querySelectorAll('.settings-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`settingsTab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.remove('hidden');
+        }
+
+        function saveProfileSettings() {
+            currentUser.name = document.getElementById('setProfileName').value.trim();
+            currentUser.surname = document.getElementById('setProfileSurname').value.trim();
+            currentUser.email = document.getElementById('setProfileEmail').value.trim();
+            currentUser.phone = document.getElementById('setProfilePhone').value.trim();
+            localStorage.setItem('techworld_user', JSON.stringify(currentUser));
+            updateHeaderUser();
+            showToast("Налаштування успішно збережено!");
+            closeSettingsModal();
+        }
+
+        function toggle2FASetting(enabled) {
+            if (currentUser) {
+                currentUser.twoFactorEnabled = enabled;
+                localStorage.setItem('techworld_user', JSON.stringify(currentUser));
+                showToast(enabled ? "2FA увімкнено" : "2FA вимкнено");
+            }
+        }
+
+        function renderOrderHistory() {
+            const container = document.getElementById('orderHistoryList');
+            if (orders.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">У вас немає замовлень.</p>`;
+                return;
+            }
+            container.innerHTML = orders.map(ord => `
+                <div class="bg-navy-900 p-4 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-blue-400">${ord.id}</span>
+                            <span class="text-xs text-slate-500">${ord.date}</span>
+                        </div>
+                        <p class="text-xs text-slate-200 mt-1">${ord.items.join(', ')}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-bold block">${ord.total}</span>
+                        <span class="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">${ord.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filtering, Search & Catalog
+        function filterCategory(cat) {
+            currentCategory = cat;
+            currentPage = 1;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.getAttribute('data-cat') === cat) {
+                    btn.className = "w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn active flex items-center justify-between text-blue-400 bg-slate-800/80";
+                } else {
+                    btn.className = "w-full text-left px-3 py-2.5 rounded-xl font-medium transition cat-btn flex items-center justify-between text-slate-400 hover:text-blue-400 hover:bg-slate-800/50";
+                }
+            });
+            renderProducts();
+        }
+
+        function changeSort(sortType) {
+            currentSort = sortType;
+            currentPage = 1;
+            renderProducts();
+        }
+
+        function handleSearch(query) {
+            searchQuery = query.toLowerCase().trim();
+            currentPage = 1;
+            renderProducts();
+
+            const resultsBox = document.getElementById('liveSearchResults');
+            if (!searchQuery) {
+                resultsBox.classList.add('hidden');
+                return;
+            }
+            const matched = products.filter(p => p.title.toLowerCase().includes(searchQuery));
+            if (matched.length === 0) {
+                resultsBox.innerHTML = `<div class="p-3 text-xs text-slate-500 text-center">Нічого не знайдено</div>`;
+            } else {
+                resultsBox.innerHTML = matched.slice(0, 5).map(p => `
+                    <div onclick="openProductDetailModal(${p.id})" class="search-item flex items-center gap-3 p-2.5 hover:bg-slate-800/60 cursor-pointer border-b border-slate-800">
+                        <img src="${p.img}" class="w-10 h-10 object-cover rounded-lg">
+                        <div class="flex-1">
+                            <div class="text-xs font-semibold text-slate-100">${p.title}</div>
+                            <div class="text-xs font-bold text-blue-400">${p.price.toLocaleString()} ₴</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            resultsBox.classList.remove('hidden');
+        }
+
+        function renderCategoryCounts() {
+            document.getElementById('countAll').innerText = products.length;
+            document.getElementById('countSmartphones').innerText = products.filter(p => p.category === 'smartphones').length;
+            document.getElementById('countLaptops').innerText = products.filter(p => p.category === 'laptops').length;
+            document.getElementById('countAudio').innerText = products.filter(p => p.category === 'audio').length;
+            document.getElementById('countGaming').innerText = products.filter(p => p.category === 'gaming').length;
+            document.getElementById('countAccessories').innerText = products.filter(p => p.category === 'accessories').length;
+        }
+
+        function renderProducts() {
+            let filtered = products.filter(p => {
+                const matchCat = currentCategory === 'all' || p.category === currentCategory;
+                const matchSearch = !searchQuery || p.title.toLowerCase().includes(searchQuery);
+                return matchCat && matchSearch;
+            });
+
+            if (currentSort === 'cheap') filtered.sort((a,b) => a.price - b.price);
+            else if (currentSort === 'expensive') filtered.sort((a,b) => b.price - a.price);
+            else if (currentSort === 'rating') filtered.sort((a,b) => b.rating - a.rating);
+            else if (currentSort === 'popular') filtered.sort((a,b) => b.reviewsCount - a.reviewsCount);
+
+            document.getElementById('totalCountSpan').innerText = filtered.length;
+
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const paginatedItems = filtered.slice(startIdx, startIdx + itemsPerPage);
+
+            const grid = document.getElementById('productGrid');
+            if (paginatedItems.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500">Товари не знайдені</div>`;
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+
+            grid.innerHTML = paginatedItems.map(p => {
+                const isFav = wishlist.some(item => item.id === p.id);
+                return `
+                <div class="custom-card p-4 flex flex-col justify-between hover:border-blue-500 transition group relative cursor-pointer" onclick="openProductDetailModal(${p.id})">
+                    <span class="absolute top-3 left-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded z-10">${p.tag}</span>
+                    <button onclick="event.stopPropagation(); toggleWishlist(${p.id})" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-900/80 text-white flex items-center justify-center hover:text-blue-400 transition z-10">
+                        <i class="fa-${isFav ? 'solid text-blue-400' : 'regular'} fa-heart"></i>
+                    </button>
+                    <div class="h-48 w-full rounded-xl mb-3 overflow-hidden bg-navy-900">
+                        <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1 text-xs text-amber-400 mb-1">
+                            <i class="fa-solid fa-star"></i>
+                            <span class="font-bold text-slate-200">${p.rating}</span>
+                            <span class="text-slate-500">(${p.reviewsCount})</span>
+                        </div>
+                        <h4 class="font-bold text-sm mb-2 line-clamp-2 h-10 text-slate-100 group-hover:text-blue-400 transition">${p.title}</h4>
+                    </div>
+                    <div class="flex items-end justify-between mt-2 pt-2 border-t border-slate-800">
+                        <div>
+                            <span class="text-[10px] text-slate-500 line-through block">${p.oldPrice.toLocaleString()} ₴</span>
+                            <span class="text-base font-black text-blue-400">${p.price.toLocaleString()} ₴</span>
+                        </div>
+                        <button onclick="event.stopPropagation(); addToCart(${p.id})" class="bg-blue-600 hover:bg-blue-500 text-white w-9 h-9 rounded-xl flex items-center justify-center shadow transition" title="В кошик">
+                            <i class="fa-solid fa-plus text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+
+            renderPaginationControls(totalPages);
+        }
+
+        // Pagination Controls with Navigation Arrows
+        function renderPaginationControls(totalPages) {
+            const container = document.getElementById('paginationContainer');
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="w-10 h-10 rounded-xl bg-navy-900 border border-slate-800 flex items-center justify-center hover:border-blue-500 hover:text-blue-400 transition">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                </button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button onclick="changePage(${i})" class="w-10 h-10 rounded-xl font-bold text-sm transition ${i === currentPage ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-navy-900 border border-slate-800 text-slate-200 hover:border-blue-500 hover:text-blue-400'}">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            html += `
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="w-10 h-10 rounded-xl bg-navy-900 border border-slate-800 flex items-center justify-center hover:border-blue-500 hover:text-blue-400 transition">
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderProducts();
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+
+        // Cart & Wishlist Logic
+        function addToCart(productId) {
+            const prod = products.find(p => p.id === productId);
+            if (!prod) return;
+            const existing = cart.find(item => item.id === productId);
+            if (existing) existing.qty += 1;
+            else cart.push({ ...prod, qty: 1 });
+            localStorage.setItem('techworld_cart', JSON.stringify(cart));
+            updateCartBadge();
+            showToast(`Товар "${prod.title.substring(0, 18)}..." додано в кошик`);
+        }
+
+        function toggleWishlist(productId) {
+            const prod = products.find(p => p.id === productId);
+            const index = wishlist.findIndex(item => item.id === productId);
+            if (index > -1) {
+                wishlist.splice(index, 1);
+                showToast("Видалено з обраного");
+            } else {
+                wishlist.push(prod);
+                showToast("Додано в обране");
+            }
+            localStorage.setItem('techworld_wishlist', JSON.stringify(wishlist));
+            updateWishlistBadge();
+            renderProducts();
+        }
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cartBadge');
+            const total = cart.reduce((sum, i) => sum + i.qty, 0);
+            if (total > 0) { badge.innerText = total; badge.classList.remove('hidden'); }
+            else badge.classList.add('hidden');
+        }
+
+        function updateWishlistBadge() {
+            const badge = document.getElementById('wishlistBadge');
+            if (wishlist.length > 0) { badge.innerText = wishlist.length; badge.classList.remove('hidden'); }
+            else badge.classList.add('hidden');
+        }
+
+        function openWishlistModal() {
+            const container = document.getElementById('wishlistItemsContainer');
+            if (wishlist.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">Список обраного порожній</p>`;
+            } else {
+                container.innerHTML = wishlist.map(item => `
+                    <div class="flex items-center justify-between bg-navy-900 p-3 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <img src="${item.img}" class="w-12 h-12 object-cover rounded-lg">
+                            <div>
+                                <h5 class="text-xs font-bold line-clamp-1 text-slate-100">${item.title}</h5>
+                                <p class="text-xs text-blue-400 font-bold">${item.price.toLocaleString()} ₴</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="addToCart(${item.id})" class="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">В кошик</button>
+                            <button onclick="toggleWishlist(${item.id})" class="text-slate-400 hover:text-blue-400"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('wishlistModal').classList.remove('hidden');
+        }
+
+        function closeWishlistModal() {
+            document.getElementById('wishlistModal').classList.add('hidden');
+        }
+
+        function openCartModal() {
+            const container = document.getElementById('cartItemsContainer');
+            if (cart.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">Ваш кошик порожній</p>`;
+            } else {
+                container.innerHTML = cart.map(item => `
+                    <div class="flex items-center justify-between bg-navy-900 p-3 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <img src="${item.img}" class="w-12 h-12 object-cover rounded-lg">
+                            <div>
+                                <h5 class="text-xs font-bold line-clamp-1 text-slate-100">${item.title}</h5>
+                                <p class="text-xs text-blue-400 font-bold">${item.price.toLocaleString()} ₴</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateCartQty(${item.id}, -1)" class="w-7 h-7 rounded-lg bg-navy-800 border border-slate-700 text-slate-200 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">-</button>
+                            <span class="text-xs font-bold w-5 text-center">${item.qty}</span>
+                            <button onclick="updateCartQty(${item.id}, 1)" class="w-7 h-7 rounded-lg bg-navy-800 border border-slate-700 text-slate-200 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">+</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            calcCartTotals();
+            document.getElementById('cartModal').classList.remove('hidden');
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').classList.add('hidden');
+        }
+
+        function updateCartQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty += delta;
+            if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+            localStorage.setItem('techworld_cart', JSON.stringify(cart));
+            updateCartBadge();
+            openCartModal();
+        }
+
+        function calcCartTotals() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('cartSubtotal').innerText = subtotal.toLocaleString() + ' ₴';
+            document.getElementById('cartTotal').innerText = subtotal.toLocaleString() + ' ₴';
+        }
+
+        function checkoutOrder() {
+            if (cart.length === 0) { showToast("Кошик порожній!", "error"); return; }
+            if (!currentUser) {
+                closeCartModal();
+                openAuthModal('login');
+                showToast("Для оформлення замовлення увійдіть в акаунт");
+                return;
+            }
+            const newOrder = {
+                id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
+                date: new Date().toLocaleDateString(),
+                total: document.getElementById('cartTotal').innerText,
+                status: "В обробці",
+                items: cart.map(i => i.title)
+            };
+            orders.unshift(newOrder);
+            localStorage.setItem('techworld_orders', JSON.stringify(orders));
+            cart = [];
+            localStorage.setItem('techworld_cart', JSON.stringify(cart));
+            updateCartBadge();
+            closeCartModal();
+            showToast("Замовлення успішно оформлено!");
+        }
+
+        // Banner Slider
+        function startBannerAutoSlide() {
+            setInterval(nextSlide, 6000);
+        }
+
+        function nextSlide() {
+            currentBannerIndex = (currentBannerIndex + 1) % banners.length;
+            updateBanner();
+        }
+
+        function prevSlide() {
+            currentBannerIndex = (currentBannerIndex - 1 + banners.length) % banners.length;
+            updateBanner();
+        }
+
+        function updateBanner() {
+            const b = banners[currentBannerIndex];
+            const slide = document.getElementById('bannerSlide');
+            slide.style.backgroundImage = `url('${b.img}')`;
+            document.getElementById('bannerTitle').innerText = b.title;
+            document.getElementById('bannerDesc').innerText = b.desc;
+        }
+
+        // Toasts
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = message;
+            toastIcon.className = type === 'error' ? "fa-solid fa-triangle-exclamation text-blue-400 text-lg" : "fa-solid fa-circle-check text-blue-400 text-lg";
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3500);
+        }
+    </script>
+</body>
+</html>
